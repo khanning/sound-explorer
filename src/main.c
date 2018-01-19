@@ -2,6 +2,8 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+#include "fatfs/ff.h"
+
 #define DELAY 100 // blink delay
 
 void init_clock(void)
@@ -17,7 +19,7 @@ void init_io(void)
   // Map VPORT0 and VPORT1 to PORTA and PORTD
   PORTCFG.VPCTRLA = PORTCFG_VP02MAP_PORTA_gc | PORTCFG_VP13MAP_PORTD_gc;
   // Map VPORT2 to PORTE
-  PORTCFG.VPCTRLB = PORTCFG_VP02MAP_PORTE_gc;
+  PORTCFG.VPCTRLB = PORTCFG_VP02MAP_PORTE_gc | PORTCFG_VP13MAP_PORTC_gc;
 
   // SET PE0 (LED) to output
   VPORT2.DIR = PIN0_bm;
@@ -42,8 +44,8 @@ void init_adc(void)
 void init_usart(void)
 {
   // Set TX (PC2) to output, high
-  PORTC.DIR = PIN3_bm;
-  PORTC.OUT = PIN3_bm;
+  PORTC.DIR |= PIN3_bm;
+  PORTC.OUT |= PIN3_bm;
 
   // Set USARTC0 baud rate
   USARTC0.BAUDCTRLB = 0;
@@ -100,15 +102,41 @@ int main(void)
   init_usart();
   init_button_interrupts();
 
+  FATFS *fs;
+
+  fs = malloc(sizeof(FATFS));
+  FRESULT res = f_mount(fs, "", 1);
+  switch(res) {
+    case FR_OK:
+      sendString("FR_OK\n");
+    break;
+    case FR_INVALID_DRIVE:
+      sendString("FR_INVALID_DRIVE\n");
+    break;
+    case FR_DISK_ERR:
+      sendString("FR_DISK_ERR\n");
+    break;
+    case FR_NOT_READY:
+      sendString("FR_NOT_READY\n");
+    break;
+    case FR_NOT_ENABLED:
+      sendString("FR_NOT_ENABLED\n");
+    break;
+    case FR_NO_FILESYSTEM:
+      sendString("FR_NO_FILESYSTEM\n");
+    break;
+  }
+
   while (1) {
-    ADCA.CH0.CTRL |= 0x80;
-    while(!(ADCA.INTFLAGS & ADC_CH0IF_bm));
-    ADCA.INTFLAGS = ADC_CH0IF_bm;
-    output = ADCA.CH0.RES;
-    itoa(output, outstring, 10);
-    sendString(outstring);
-    sendChar('\r');
-    sendChar('\n');
-    _delay_ms(100);
+    ;
+    // ADCA.CH0.CTRL |= 0x80;
+    // while(!(ADCA.INTFLAGS & ADC_CH0IF_bm));
+    // ADCA.INTFLAGS = ADC_CH0IF_bm;
+    // output = ADCA.CH0.RES;
+    // itoa(output, outstring, 10);
+    // sendString(outstring);
+    // sendChar('\r');
+    // sendChar('\n');
+    // _delay_ms(100);
   }
 }

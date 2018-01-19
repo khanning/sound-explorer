@@ -1,5 +1,5 @@
 PROJECT=main
-SOURCES=$(PROJECT).c
+SOURCES=$(PROJECT).c fatfs/ff.c fatfs/diskio.c fatfs/mmc_avr_spi.c
 MMCU=atxmega16a4u
 F_CPU=32000000
 TARGET=x16a4u
