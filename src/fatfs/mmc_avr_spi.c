@@ -76,13 +76,11 @@ static
 void power_on (void)
 {
 
-
 	/* Configure MOSI/MISO/SCLK/CS pins */
 	VPORT3.DIR |= PIN4_bm | PIN5_bm | PIN7_bm;
 	SPIC.CTRL = 0xD3; //SPI Enable, /128 SPI prescaler
 	SPIC.INTCTRL = 1;
-
-	VPORT3.OUT |= PIN5_bm;
+	
 
 }
 
@@ -333,7 +331,6 @@ BYTE send_cmd (		/* Returns R1 resp (bit7==1:Send failed) */
 DSTATUS mmc_disk_initialize (void)
 {
 	BYTE n, cmd, ty, ocr[4];
-
 
 	power_off();						/* Turn off the socket power to reset the card */
 	for (Timer1 = 10; Timer1; ) ;		/* Wait for 100ms */

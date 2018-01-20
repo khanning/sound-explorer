@@ -3,6 +3,7 @@
 #include <util/delay.h>
 
 #include "fatfs/ff.h"
+#include "fatfs/diskio.h"
 
 #define DELAY 100 // blink delay
 
@@ -23,6 +24,12 @@ void init_io(void)
 
   // SET PE0 (LED) to output
   VPORT2.DIR = PIN0_bm;
+
+  /* Start 100Hz system timer with TC0 */
+  TCC0.CTRLA = TC_CLKSEL_DIV256_gc;
+  TCC0.INTCTRLA = TC_OVFINTLVL_LO_gc;
+  TCC0.PER = 1250; // With a 32 MHz clock and a /256 prescaler, counting to 1250 gives up ~100Hz
+  PMIC.CTRL |= PMIC_LOLVLEN_bm; // Enable low-level interrupts (though sei() still needs to be called before interrupts will start)
 }
 
 void init_adc(void)
@@ -90,6 +97,12 @@ void sendString(char *text)
   {
     sendChar(*text++);
   }
+}
+
+// Timer interrupt for driving SD communication
+ISR(TCC0_OVF_vect) {
+  TCC0.INTFLAGS |= TC0_OVFIF_bm; // Clear interrupt flag
+  disk_timerproc();
 }
 
 int main(void)
