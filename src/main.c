@@ -2,8 +2,10 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-#include "fatfs/ff.h"
-#include "fatfs/diskio.h"
+#include "lib/fatfs/ff.h"
+#include "lib/fatfs/diskio.h"
+
+#include "lib/serial.h"
 
 #define DELAY 100 // blink delay
 
@@ -48,21 +50,6 @@ void init_adc(void)
   ADCA.CTRLA = ADC_ENABLE_bm;
 }
 
-void init_usart(void)
-{
-  // Set TX (PC2) to output, high
-  PORTC.DIR |= PIN3_bm;
-  PORTC.OUT |= PIN3_bm;
-
-  // Set USARTC0 baud rate
-  USARTC0.BAUDCTRLB = 0;
-  USARTC0.BAUDCTRLA = 0xCF; // BSEL 207.333
-
-  USARTC0.CTRLA = 0;
-  USARTC0.CTRLC = USART_CHSIZE_8BIT_gc;
-  USARTC0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
-}
-
 void init_button_interrupts(void)
 {
   PORTE.PIN1CTRL = PORT_OPC_PULLUP_gc | PORT_ISC_BOTHEDGES_gc;
@@ -83,20 +70,6 @@ ISR(PORTE_INT0_vect)
 ISR(PORTE_INT1_vect)
 {
   VPORT2.OUT = 0;
-}
-
-void sendChar(char c)
-{
- while (!(USARTC0.STATUS & USART_DREIF_bm));
- USARTC0.DATA = c;
-}
-
-void sendString(char *text)
-{
-  while (*text)
-  {
-    sendChar(*text++);
-  }
 }
 
 // Timer interrupt for driving SD communication
